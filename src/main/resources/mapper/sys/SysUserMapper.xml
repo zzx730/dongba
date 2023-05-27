@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cy.pj.sys.dao.SysUserDao">
+	<sql id="queryWhereId">
+		from sys_users
+		<where>
+			<if test="username!=null and username!=''">
+				username like concat("%",#{username},"%")
+			</if>
+		</where>
+	</sql>
+	<select id="getRowCount" resultType="int">
+		select count(*)
+		<include refid="queryWhereId" />
+	</select>
+	<select id="findPageObjects" resultMap="sysUserDeptVo">
+		select *
+		<include refid="queryWhereId" />
+		order by createdTime desc
+		limit #{startIndex},#{pageSize}
+	</select>
+	<resultMap type="com.cy.pj.common.pojo.SysUserDeptVo"
+		id="sysUserDeptVo">
+		<!-- 一般应用于many2one或one2one做关联查询 在当前应用是基于deptId查询部门信息并将其 存储到SysUserDeptVo对象的sysDept属性中。 -->
+		<association property="sysDept" column="deptId"
+			select="com.cy.pj.sys.dao.SysDeptDao.findById">
+		</association>
+	</resultMap>
+	<update id="validById">
+		update sys_users
+		set valid=#{valid},
+		modifiedUser=#{modifiedUser},
+		modifiedTime=now()
+		where id=#{id}
+	</update>
+	<insert id="insertObjects">
+		insert into sys_user_roles(user_id,role_id) values
+		<foreach collection="roleIds" separator="," item="roleId">
+			(#{userId},#{roleId})
+		</foreach>
+	</insert>
+	<insert id="insertObject" useGeneratedKeys="true"
+		keyProperty="id">
+		insert into
+		sys_users(id,username,password,salt,email,mobile,valid,deptId,createdTime,modifiedTime,createdUser,modifiedUser)
+		values(null,#{username},#{password},#{salt},#{email},#{mobile},#{valid},#{deptId},now(),now(),#{createdUser},#{modifiedUser})
+	</insert>
+	<select id="findObjectByDeptId" resultType="com.cy.pj.sys.entity.SysDept">
+		select DISTINCT
+		sys_depts.name,sys_depts.id from sys_depts inner join sys_users on sys_depts.id =
+		(select deptId from sys_users where id=#{id});
+	</select>
+</mapper>

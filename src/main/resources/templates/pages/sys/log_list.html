@@ -1,0 +1,232 @@
+<div class="row">
+	<div class="col-xs-12">
+		<div class="box">
+			<div class="box-header">
+				<h3 class="box-title">日志管理</h3>
+				<div class="box-tools">
+					<div class="input-group input-group-sm" style="width: 350px;">
+						<input type="text" name="table_search" id="searchNameId"
+							class="form-control pull-right" placeholder="用户名">
+
+						<div class="input-group-btn">
+							<button type="button" class="btn btn-default btn-search">
+								<i class="fa fa-search"></i>
+							</button>
+							<button type="button" class="btn btn-default btn-delete">删除</button>
+						</div>
+					</div>
+				</div>
+			</div>
+			<!-- /.box-header -->
+			<div class="box-body table-responsive no-padding">
+				<table class="table table-hover">
+					<thead>
+						<tr>
+							<th><input type="checkbox" id="checkAll">全选</th>
+							<th>用户名</th>
+							<th>操作</th>
+							<th>请求方法</th>
+							<th>请求参数</th>
+							<th>IP</th>
+							<th>执行时长</th>
+						</tr>
+					</thead>
+					<tbody id="tbodyId">
+						<tr>
+							<td colspan="7">数据正在加载中...</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+			<div id="pageId" a="123" class="box-footer clearfix" dm="100"
+			th:insert="common/page.html :: pageFragment" ><!-- "~{common/page.html}"这个是把整个page页面插入，也可以部分加载
+			而 "common/page.html :: pageFragment"这个是选择div部分插入-->
+			</div>
+			<!-- /.box-body -->
+		</div>
+		<!-- /.box -->
+	</div>
+</div>
+
+<script type="text/javascript">
+$(function(){
+	//当日志列表页面加载完成以后，加载分页页面。
+   /* $("#pageId").load("doPageUI",function(){//资源加载完成以后执行
+    	//异步加载用户行为日志信息
+    	doGetObjects();
+    });*/
+	//上面写法的简化形式
+	//$("#pageId").load("doPageUI",doGetObjects)//不要写成doGetObjects（），加（）表示立即执行
+	//on函数语法：$("选择器").on("事件","子元素选择器",[数据],事件处理函数)
+	doGetObjects();
+	$(".input-group-btn")
+	.on("click",".btn-search",doQueryObjects)
+	.on("click",".btn-delete",doDeleteObjects)
+	//全选checkbox对象上的事件注册（一般与状态相关的事件会用change）
+	$("#checkAll").change(doChangeTBodyCheckBoxState)
+	//tbody中checkbox对象的事件注册input:checkbox
+	$("#tbodyId").on("change","input[type=checkbox]",doChangeTHeadCheckBoxState)
+	
+});
+//处理查询按钮事件
+function doQueryObjects()
+{
+	//1.定义参数
+	$("#pageId").data("pageCurrent",1);//设置当前页码值
+	//2.定义请求url
+	//3.发送异步请求
+	doGetObjects();
+}
+
+//开启ajax异步任务，按条件加载用户行为日志信息
+function doGetObjects()
+{
+	//1.定义请求参数
+	//1.1定义参数的方式1
+	//var params="pageCurrent=1";
+	//1.2定义参数方式2
+	var pageCurrent = $("#pageId").data("pageCurrent");
+	if(!pageCurrent)pageCurrent=1;
+	var params={"pageCurrent":pageCurrent};
+	var uname=$("#searchNameId").val();
+	//向Json格式的js对象中动态添加key,value;
+	if(uname)params.username=uname;//这里的key需要与服务端接收参数时使用的名字相同
+	//2.定义请求url
+	var url = "log/doFindPageObjects";
+	//3.发送异步请求处理响应结果
+	/*$.getJSON(url,params,function(result){
+		doHandleQueryResponseResult(result);
+	});*/
+	//如上方法的简写形式
+	$.getJSON(url,params,doHandleQueryResponseResult);
+}
+	function doHandleQueryResponseResult(result)
+	{//result为json格式的js对象
+		if(result.state==1)
+		{//state==1表示是正常的响应数据
+			//将result.data.records呈现在log_list.html的tbody位置
+			doSetTableBodyRows(result.data.records);
+			//将result.data中的分页信息呈现在page.html指定位置
+			doSetPagination(result.data);
+			$("#checkAll").prop("checked",false);
+		}else
+		{
+			doHandleQueryError(result.message);
+		}
+		
+	}
+//更新table对象的tbody位置的内容
+function doSetTableBodyRows(records)
+{
+	//1.获得tbody对象并清空原有内容
+	var tBody=$("#tbodyId");
+	tBody.empty();
+	//2.迭代records记录并将其追加到tbody中
+	records.forEach(item=>tBody.append(doCreateRows(item)));
+}
+	function doCreateRows(item)
+	{
+		return `<tr>
+					<td><input type='checkbox' value=${item.id}></td>
+					<td>${item.username}</td>
+					<td>${item.operation}</td>
+					<td>${item.method}</td>
+					<td>${item.params}</td>
+					<td>${item.ip}</td>
+					<td>${item.time}</td>
+				</tr>`;
+	}
+	
+		function doDeleteObjects()
+		{
+			//选取选中id的值
+			var ids = doGetCheckedIds();
+			if(ids.length==0)
+			{
+				alert("至少选择一个");
+				return;
+			}
+			//发送异步请求执行删除操作
+			var url = "log/doDeleteObjects";
+			var params = {"ids":ids.toString()};
+			$.post(url,params,function(result){
+				if(result.state==1)
+				{
+					alert(result.message);
+					doRefreshAfterDeleteOK();
+				}else{
+					alert(result.message);
+				}
+				
+			});
+			
+		}
+		function doHandleQueryError(msg)
+		{
+			$("#tbodyId").html(`<tr><td colspan=7>${msg}</td><tr>`)
+			$("#checkAll").prop("checked",false);
+			$(".rowCount").html("总记录数(0)");
+			//初始化总页数
+			$(".pageCount").html("总页数(0)");
+			//初始化当前页
+			//基于Jquery框架实现
+			$(".pageCurrent").html("当前页(1)");
+		}
+		function doGetCheckedIds()
+		{
+			var array = [];//new Array();
+			$("#tbodyId input[type = 'checkbox']").each(function(){
+				if($(this).prop("checked"))
+				{
+					array.push($(this).val());
+				}
+			});
+			return array;
+		}
+		
+		//如果全选按钮选中，自动选中其他复选框
+		function doChangeTBodyCheckBoxState()
+		{
+			
+			var flag = $(this).prop("checked");
+			//根据name查找
+			/*
+			$("#tbodyId input[name='CItem']").each(function(){
+				$(this).prop("checked",flag);
+			})*/
+			//"#tbodyId input:checkbox"
+			$("#tbodyId input[type='checkbox']").prop("checked",flag);
+		}
+		//如果其他复选框全部选中，那么自动选中全选框,反之则取消选中
+		function doChangeTHeadCheckBoxState()
+		{
+			//1.设置默认状态值
+			var flag = true;
+			
+			//2.迭代所有tbody中的checkbox值并进行与操作
+			$("#tbodyId input[type='checkbox']").each(function(){
+				flag=flag&&$(this).prop('checked');
+			});
+			//修改全选元素checkbox的值为flag
+			$("#checkAll").prop("checked",flag);
+		}
+		
+		
+		function doRefreshAfterDeleteOK()
+		{
+			var pageCount = $("#pageId").data("pageCount");
+			var pageCurrent = $("#pageId").data("pageCurrent");
+			var checked = $("#checkAll").prop("checked");
+			if(pageCurrent == pageCount&&pageCurrent>1&&checked)
+			{
+				pageCurrent--;
+				$("#pageId").data("pageCurrent",pageCurrent);
+			}
+			doGetObjects();
+		}
+</script>
+
+
+
+
+

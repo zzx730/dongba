@@ -1,0 +1,57 @@
+{"properties": [
+  {
+    "name": "spring.task.execution.async-thread-pool.core-pool-size",
+    "type": "java.lang.String",
+    "description": "A description for 'spring.task.execution.async-thread-pool.core-pool-size'"
+  },
+  {
+    "name": "spring.task.execution.async-thread-pool.maxPoolSize",
+    "type": "java.lang.String",
+    "description": "A description for 'spring.task.execution.async-thread-pool.maxPoolSize'"
+  },
+  {
+    "name": "spring.task.execution.async-thread-pool.keepAliveSeconds",
+    "type": "java.lang.String",
+    "description": "A description for 'spring.task.execution.async-thread-pool.keepAliveSeconds'"
+  },
+  {
+    "name": "spring.task.execution.async-thread-pool.queueCapacity",
+    "type": "java.lang.String",
+    "description": "A description for 'spring.task.execution.async-thread-pool.queueCapacity'"
+  },
+  {
+    "name": "spring.task.execution.async-thread-pool1.core-pool-size",
+    "type": "java.lang.String",
+    "description": "A description for 'spring.task.execution.async-thread-pool1.core-pool-size'"
+  },
+  {
+    "name": "spring.task.execution.async-thread-pool2.core-pool-size",
+    "type": "java.lang.String",
+    "description": "A description for 'spring.task.execution.async-thread-pool2.core-pool-size'"
+  },
+  {
+    "name": "spring.task.execution.async-thread-pool5.core-pool-size",
+    "type": "java.lang.String",
+    "description": "A description for 'spring.task.execution.async-thread-pool5.core-pool-size'"
+  },
+  {
+    "name": "async-thread-pool.maxPoolSize",
+    "type": "java.lang.String",
+    "description": "A description for 'async-thread-pool.maxPoolSize'"
+  },
+  {
+    "name": "async-thread-pool.keepAliveSeconds",
+    "type": "java.lang.String",
+    "description": "A description for 'async-thread-pool.keepAliveSeconds'"
+  },
+  {
+    "name": "async-thread-pool.corePoolSize",
+    "type": "java.lang.String",
+    "description": "A description for 'async-thread-pool.corePoolSize'"
+  },
+  {
+    "name": "async-thread-pool.queueCapacity",
+    "type": "java.lang.String",
+    "description": "A description for 'async-thread-pool.queueCapacity'"
+  }
+]}
